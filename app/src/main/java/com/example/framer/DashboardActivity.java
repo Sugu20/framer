@@ -5,20 +5,21 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
 public class DashboardActivity extends AppCompatActivity {
 
     private ImageView profileImage;
     private Button btnUpload;
-    private GridView imageGrid;
+    private RecyclerView imageRecyclerView;
     private TextView instruction1, instruction2, instruction3, instruction4;
 
     private ArrayList<Uri> selectedImages = new ArrayList<>();
@@ -33,6 +34,7 @@ public class DashboardActivity extends AppCompatActivity {
                     selectedImages.clear();
                     selectedImages.addAll(result);
                     imageAdapter.notifyDataSetChanged();
+                    navigateToImageLayout(selectedImages.size());
                 }
             }
     );
@@ -44,20 +46,49 @@ public class DashboardActivity extends AppCompatActivity {
 
         profileImage = findViewById(R.id.profileImage);
         btnUpload = findViewById(R.id.btnUpload);
-        imageGrid = findViewById(R.id.imageGrid);
+        imageRecyclerView = findViewById(R.id.imageRecyclerView);
         instruction1 = findViewById(R.id.instruction1);
         instruction2 = findViewById(R.id.instruction2);
         instruction3 = findViewById(R.id.instruction3);
         instruction4 = findViewById(R.id.instruction4);
 
+        // Set up RecyclerView
         imageAdapter = new ImageAdapter(this, selectedImages);
-        imageGrid.setAdapter(imageAdapter);
+        imageRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
+        imageRecyclerView.setAdapter(imageAdapter);
 
-        btnUpload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                imagePickerLauncher.launch("image/*");
-            }
-        });
+        btnUpload.setOnClickListener(v -> imagePickerLauncher.launch("image/*"));
+    }
+
+    private void navigateToImageLayout(int imageCount) {
+        Class<?> targetActivity;
+        switch (imageCount) {
+            case 2:
+                targetActivity = TwoImageLayoutActivity.class;
+                break;
+            case 3:
+                targetActivity = ThreeImageLayoutActivity.class;
+                break;
+            case 4:
+                targetActivity = FourImageLayoutActivity.class;
+                break;
+            case 5:
+                targetActivity = FiveImageLayoutActivity.class;
+                break;
+            default:
+                return;
+        }
+
+        Intent intent = new Intent(DashboardActivity.this, targetActivity);
+
+        // Convert URI list to string array for passing through intent
+        ArrayList<String> imageUris = new ArrayList<>();
+        for (Uri uri : selectedImages) {
+            imageUris.add(uri.toString());
+        }
+
+        intent.putStringArrayListExtra("selectedImages", imageUris);
+        startActivity(intent);
     }
 }
+
